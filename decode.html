@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QRCode File Transfer Decoder</title>
+</head>
+<body>
+<div style="margin: .5em 0">
+    <button id="reset-button">Reset</button>
+    <div style="display: inline-block">File: <span id="file-name"></span> (<span id="file-length"></span> bytes)</div>
+    <div style="display: inline-block; margin-right: 2em">Speed: <span id="speed"></span> ms.</div>
+    <div style="display: inline-block; margin-right: 2em">Progress: <span id="finished-block-count">0</span> / <span id="all-block-count">100</span>.</div>
+    <button id="download-button">Download</button>
+</div>
+<canvas id="progress-bar" width="100" height="1" style="width: 100%; height: 1.5em; image-rendering: pixelated"></canvas>
+<div id="log"></div>
+<canvas id="canvas" style="width: 100%;"></canvas>
+<script src="js/jsQR.js"></script>
+<script src="js/FileSaver.min.js"></script>
+<script src="js/decode.js"></script>
+</body>
+</html>
