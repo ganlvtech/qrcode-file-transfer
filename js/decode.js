@@ -104,37 +104,40 @@ navigator.mediaDevices.getUserMedia({
             const t1 = Date.now();
             if (code) {
                 drawQrcodeRegion(ctx, code);
-                const result = parseQRcodeBuffer(new Uint8ClampedArray(code.binaryData).buffer);
-                if (result.blockIndex === 0) {
-                    if (result.fileName !== fileName || result.fileLength !== fileData.byteLength) {
-                        fileName = result.fileName;
-                        fileData = new Uint8ClampedArray(result.fileLength);
-                        blockCount = result.lastBlockIndex;
-                        remainingBlockIndexSet = new Set();
-                        for (let i = 1; i <= result.lastBlockIndex; i++) {
-                            remainingBlockIndexSet.add(i);
+                if (code.binaryData.length > 8) {
+                    const result = parseQRcodeBuffer(new Uint8ClampedArray(code.binaryData).buffer);
+                    if (result.blockIndex === 0) {
+                        if (result.fileName !== fileName || result.fileLength !== fileData.byteLength) {
+                            fileName = result.fileName;
+                            fileData = new Uint8ClampedArray(result.fileLength);
+                            blockCount = result.lastBlockIndex;
+                            remainingBlockIndexSet = new Set();
+                            for (let i = 1; i <= result.lastBlockIndex; i++) {
+                                remainingBlockIndexSet.add(i);
+                            }
+                            document.querySelector('#file-name').textContent = `${result.fileName}`;
+                            document.querySelector('#file-length').textContent = `${result.fileLength}`;
+                            document.querySelector('#speed').textContent = `${t1 - t0}`;
+                            document.querySelector('#finished-block-count').textContent = `1`;
+                            document.querySelector('#all-block-count').textContent = `${blockCount}`;
+                            progressBarCanvas.width = result.lastBlockIndex + 1;
+                            progressBarCtx.fillStyle = '#ccc';
+                            progressBarCtx.fillRect(0, 0, progressBarCanvas.width, progressBarCanvas.height);
+                            progressBarCtx.fillStyle = '#390';
+                            progressBarCtx.fillRect(result.blockIndex, 0, 1, 1);
                         }
-                        document.querySelector('#file-name').textContent = `${result.fileName}`;
-                        document.querySelector('#file-length').textContent = `${result.fileLength}`;
-                        document.querySelector('#speed').textContent = `${t1 - t0}`;
-                        document.querySelector('#finished-block-count').textContent = `1`;
-                        document.querySelector('#all-block-count').textContent = `${blockCount}`;
-                        progressBarCanvas.width = result.lastBlockIndex + 1;
-                        progressBarCtx.fillStyle = '#ccc';
-                        progressBarCtx.fillRect(0, 0, progressBarCanvas.width, progressBarCanvas.height);
-                        progressBarCtx.fillStyle = '#390';
-                        progressBarCtx.fillRect(result.blockIndex, 0, 1, 1);
+                    } else {
+                        if (fileData) {
+                            (new Uint8ClampedArray(fileData.buffer, result.blockOffset, result.blockData.length)).set(result.blockData);
+                            remainingBlockIndexSet.delete(result.blockIndex);
+                            document.querySelector('#finished-block-count').textContent = `${blockCount - remainingBlockIndexSet.size}`;
+                            progressBarCtx.fillStyle = '#390';
+                            progressBarCtx.fillRect(result.blockIndex, 0, 1, 1);
+                        }
                     }
-                } else {
-                    if (fileData) {
-                        (new Uint8ClampedArray(fileData.buffer, result.blockOffset, result.blockData.length)).set(result.blockData);
-                        remainingBlockIndexSet.delete(result.blockIndex);
-                        document.querySelector('#finished-block-count').textContent = `${blockCount - remainingBlockIndexSet.size}`;
-                        progressBarCtx.fillStyle = '#390';
-                        progressBarCtx.fillRect(result.blockIndex, 0, 1, 1);
-                    }
+                    console.log(fileName, result.blockIndex, remainingBlockIndexSet);
+
                 }
-                console.log(fileName, result.blockIndex, remainingBlockIndexSet);
             }
         }
         requestAnimationFrame(tick);
